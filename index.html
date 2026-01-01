@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Path Drawer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            overflow: hidden;
+            background: #f5f5f5;
+            position: relative;
+            border: 2px solid #e0e0e0;
+            margin: 20px;
+            border-radius: 12px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            background: white;
+        }
+
+        canvas.dark-mode {
+            background: #1a1a1a;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #f9f9f9;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-undo {
+            background: #4CAF50;
+            color: white;
+            font-size: 18px;
+        }
+
+        .btn-redo {
+            background: #4CAF50;
+            color: white;
+            font-size: 18px;
+        }
+
+        .btn-dark-mode {
+            background: #FFC107;
+            color: white;
+            font-size: 18px;
+        }
+
+        .btn-dark-mode.active {
+            background: #2196F3;
+        }
+
+        .btn-exchange {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+            color: white;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-clear {
+            background: #FF3B30;
+            color: white;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-save {
+            background: #007AFF;
+            color: white;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .received-canvas {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .received-canvas.dark {
+            background: #1a1a1a;
+        }
+
+        .char-element {
+            position: absolute;
+            font-weight: 600;
+            white-space: nowrap;
+            transform-origin: center;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+                margin-bottom: 10px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .button-group {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .btn-exchange,
+            .btn-clear,
+            .btn-save {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Text Path Drawer</h1>
+            <div class="input-group">
+                <input type="text" id="textInput" placeholder="Draw your text path" value="Draw your text path">
+                <input type="text" id="titleInput" placeholder="作品のタイトル...">
+            </div>
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="toolbar">
+            <div class="button-group">
+                <button class="btn-undo" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+                <button class="btn-redo" id="redoBtn" title="Redo (Ctrl+Shift+Z)">↷ Redo</button>
+                <button class="btn-dark-mode" id="darkModeBtn" title="Toggle Dark Mode">☀️</button>
+            </div>
+            <div class="button-group">
+                <button class="btn-exchange" id="exchangeBtn">作品を交換</button>
+                <button class="btn-clear" id="clearBtn">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交換完了モーダル -->
+    <div class="modal" id="exchangeModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">作品を受け取りました！</div>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="status-message" id="statusMessage" style="display: none;">
+                <span class="loading"></span>
+                <span>作品を交換中...</span>
+            </div>
+            <div class="received-canvas" id="receivedCanvas"></div>
+            <button class="btn-exchange" id="nextBtn" style="width: 100%;">次の作品を描く</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== グローバル状態管理 =====
+        const state = {
+            anonymousUserId: '',
+            isDarkMode: false,
+            textPaths: [],
+            undoStack: [],
+            redoStack: [],
+            isDrawing: false,
+            currentStroke: null,
+            currentChars: [],
+            isStrokeFinalized: false,
+            strokeStartTime: 0,
+            lastUpdateTime: 0,
+            animationFrameId: null,
+        };
+
+        // ===== DOM要素 =====
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('textInput');
+        const titleInput = document.getElementById('titleInput');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        const exchangeBtn = document.getElementById('exchangeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exchangeModal = document.getElementById('exchangeModal');
+        const receivedCanvas = document.getElementById('receivedCanvas');
+        const nextBtn = document.getElementById('nextBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const statusMessage = document.getElementById('statusMessage');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // ===== ユーティリティ関数 =====
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function getOrCreateAnonymousUserId() {
+            let userId = localStorage.getItem('anonymousUserId');
+            if (!userId) {
+                userId = generateUUID();
+                localStorage.setItem('anonymousUserId', userId);
+            }
+            return userId;
+        }
+
+        function saveState() {
+            const saveData = {
+                textPaths: state.textPaths,
+                isDarkMode: state.isDarkMode,
+                title: titleInput.value,
+                text: textInput.value,
+            };
+            localStorage.setItem(`canvasState_${state.anonymousUserId}`, JSON.stringify(saveData));
+        }
+
+        function restoreState() {
+            const saved = localStorage.getItem(`canvasState_${state.anonymousUserId}`);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    state.textPaths = data.textPaths || [];
+                    state.isDarkMode = data.isDarkMode || false;
+                    titleInput.value = data.title || '';
+                    textInput.value = data.text || 'Draw your text path';
+                    updateDarkModeUI();
+                    redraw();
+                } catch (e) {
+                    console.error('Failed to restore state:', e);
+                }
+            }
+        }
+
+        // ===== キャンバス管理 =====
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+            redraw();
+        }
+
+        function redraw() {
+            const bgColor = state.isDarkMode ? '#1a1a1a' : '#FFFFFF';
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 保存されたテキストパスを描画
+            state.textPaths.forEach(pathData => {
+                pathData.chars.forEach(char => {
+                    drawChar(char, pathData.isDark);
+                });
+            });
+
+            // 現在のストロークを描画
+            state.currentChars.forEach(char => {
+                drawChar(char, state.isDarkMode);
+            });
+        }
+
+        function drawChar(charPos, isDark) {
+            ctx.save();
+            ctx.translate(charPos.x, charPos.y);
+            ctx.rotate((charPos.rotation * Math.PI) / 180);
+            ctx.font = `600 ${charPos.fontSize}px system-ui`;
+            ctx.fillStyle = isDark ? '#FFFFFF' : '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(charPos.char, 0, 0);
+            ctx.restore();
+        }
+
+        // ===== 文字配置計算 =====
+        function calculatePathLength(points) {
+            let length = 0;
+            for (let i = 0; i < points.length - 1; i++) {
+                const dx = points[i + 1].x - points[i].x;
+                const dy = points[i + 1].y - points[i].y;
+                length += Math.sqrt(dx * dx + dy * dy);
+            }
+            return length;
+        }
+
+        function calculateCharPositions(points, text, isDark, startTime, endTime, forcedFontSize) {
+            if (points.length < 1 || !text) return [];
+
+            const chars = [];
+            const totalLength = calculatePathLength(points);
+            const charCount = text.length;
+            const strokeDuration = Math.max(endTime - startTime, 1);
+
+            const spacing = totalLength > 0 ? totalLength / Math.max(charCount, 1) : 0;
+
+            let baseFontSize;
+            if (forcedFontSize !== undefined) {
+                baseFontSize = forcedFontSize;
+            } else {
+                const minFontSize = 12;
+                const maxFontSize = 60;
+                const durationFactor = Math.min(strokeDuration / 2000, 1);
+                baseFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
+            }
+
+            if (points.length < 2) {
+                const point = points[0];
+                for (let i = 0; i < charCount; i++) {
+                    chars.push({
+                        char: text[i],
+                        x: point.x,
+                        y: point.y,
+                        rotation: 0,
+                        fontSize: baseFontSize,
+                    });
+                }
+                return chars;
+            }
+
+            let accumulatedLength = 0;
+            let charIndex = 0;
+
+            for (let i = 0; i < points.length - 1 && charIndex < charCount; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const segmentLength = Math.sqrt(
+                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+                );
+
+                while (
+                    accumulatedLength < (charIndex + 1) * spacing &&
+                    charIndex < charCount
+                ) {
+                    const t = segmentLength > 0 ? ((charIndex + 1) * spacing - accumulatedLength) / segmentLength : 0;
+                    if (t > 1) break;
+
+                    const x = p1.x + (p2.x - p1.x) * t;
+                    const y = p1.y + (p2.y - p1.y) * t;
+                    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+                    chars.push({
+                        char: text[charIndex],
+                        x,
+                        y,
+                        rotation: (angle * 180) / Math.PI,
+                        fontSize: baseFontSize,
+                    });
+
+                    charIndex++;
+                }
+
+                accumulatedLength += segmentLength;
+            }
+
+            if (charIndex < charCount) {
+                const lastPoint = points[points.length - 1];
+                for (let i = charIndex; i < charCount; i++) {
+                    chars.push({
+                        char: text[i],
+                        x: lastPoint.x,
+                        y: lastPoint.y,
+                        rotation: 0,
+                        fontSize: baseFontSize,
+                    });
+                }
+            }
+
+            return chars;
+        }
+
+        // ===== イベントハンドラ =====
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const now = Date.now();
+
+            state.isDrawing = true;
+            state.isStrokeFinalized = false;
+            state.currentStroke = {
+                points: [{ x, y, timestamp: now }],
+                startTime: now,
+                endTime: now,
+            };
+            state.currentChars = [];
+            state.strokeStartTime = now;
+            state.lastUpdateTime = now;
+
+            startAnimationLoop();
+        }
+
+        function handleMouseMove(e) {
+            if (!state.isDrawing || !state.currentStroke) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const now = Date.now();
+
+            state.currentStroke.points.push({ x, y, timestamp: now });
+            state.currentStroke.endTime = now;
+        }
+
+        function handleMouseUp() {
+            if (state.isDrawing && state.currentStroke && state.currentStroke.points.length > 1 && textInput.value.trim()) {
+                const strokeDuration = Math.max(state.currentStroke.endTime - state.currentStroke.startTime, 1);
+                const minFontSize = 12;
+                const maxFontSize = 60;
+                const durationFactor = Math.min(strokeDuration / 2000, 1);
+                const finalFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
+
+                const chars = calculateCharPositions(
+                    state.currentStroke.points,
+                    textInput.value,
+                    state.isDarkMode,
+                    state.currentStroke.startTime,
+                    state.currentStroke.endTime,
+                    finalFontSize
+                );
+
+                const newTextPaths = [...state.textPaths, { chars, isDark: state.isDarkMode }];
+                saveToUndoStack(newTextPaths);
+            }
+
+            state.isDrawing = false;
+            state.isStrokeFinalized = true;
+            state.currentStroke = null;
+            state.currentChars = [];
+
+            if (state.animationFrameId !== null) {
+                cancelAnimationFrame(state.animationFrameId);
+                state.animationFrameId = null;
+            }
+
+            redraw();
+        }
+
+        function startAnimationLoop() {
+            const updateFrame = () => {
+                const now = Date.now();
+
+                if (now - state.lastUpdateTime < 16) {
+                    state.animationFrameId = requestAnimationFrame(updateFrame);
+                    return;
+                }
+
+                state.lastUpdateTime = now;
+
+                if (state.currentStroke) {
+                    state.currentStroke.endTime = now;
+                    state.currentChars = calculateCharPositions(
+                        state.currentStroke.points,
+                        textInput.value,
+                        state.isDarkMode,
+                        state.currentStroke.startTime,
+                        state.currentStroke.endTime,
+                        undefined
+                    );
+                    redraw();
+                }
+
+                state.animationFrameId = requestAnimationFrame(updateFrame);
+            };
+
+            state.animationFrameId = requestAnimationFrame(updateFrame);
+        }
+
+        // ===== Undo/Redo =====
+        function saveToUndoStack(newTextPaths) {
+            state.undoStack.push({ textPaths: state.textPaths });
+            state.redoStack = [];
+            state.textPaths = newTextPaths;
+            updateButtonStates();
+            saveState();
+            redraw();
+        }
+
+        function handleUndo() {
+            if (state.undoStack.length === 0) return;
+
+            const previousState = state.undoStack.pop();
+            state.redoStack.push({ textPaths: state.textPaths });
+            state.textPaths = previousState.textPaths;
+            updateButtonStates();
+            saveState();
+            redraw();
+        }
+
+        function handleRedo() {
+            if (state.redoStack.length === 0) return;
+
+            const nextState = state.redoStack.pop();
+            state.undoStack.push({ textPaths: state.textPaths });
+            state.textPaths = nextState.textPaths;
+            updateButtonStates();
+            saveState();
+            redraw();
+        }
+
+        function updateButtonStates() {
+            undoBtn.disabled = state.undoStack.length === 0;
+            redoBtn.disabled = state.redoStack.length === 0;
+        }
+
+        // ===== ダークモード =====
+        function toggleDarkMode() {
+            state.isDarkMode = !state.isDarkMode;
+            updateDarkModeUI();
+            saveState();
+            redraw();
+        }
+
+        function updateDarkModeUI() {
+            if (state.isDarkMode) {
+                canvas.classList.add('dark-mode');
+                darkModeBtn.classList.add('active');
+                darkModeBtn.textContent = '🌙';
+            } else {
+                canvas.classList.remove('dark-mode');
+                darkModeBtn.classList.remove('active');
+                darkModeBtn.textContent = '☀️';
+            }
+        }
+
+        // ===== クリア =====
+        function handleClear() {
+            if (state.textPaths.length > 0) {
+                saveToUndoStack([]);
+            }
+            state.currentStroke = null;
+            state.currentChars = [];
+            state.isStrokeFinalized = false;
+            redraw();
+        }
+
+        // ===== 作品交換 =====
+        async function handleExchange() {
+            if (!titleInput.value.trim()) {
+                showError('タイトルが必要です');
+                return;
+            }
+
+            if (state.textPaths.length === 0) {
+                showError('作品を描いてください');
+                return;
+            }
+
+            exchangeBtn.disabled = true;
+            statusMessage.style.display = 'flex';
+            errorMessage.classList.remove('show');
+
+            try {
+                const strokesData = JSON.stringify(state.textPaths);
+
+                // 作品を保存
+                const saveResponse = await fetch('/api/artworks/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        anonymousUserId: state.anonymousUserId,
+                        title: titleInput.value,
+                        strokesData,
+                        isDarkBg: state.isDarkMode,
+                    }),
+                });
+
+                if (!saveResponse.ok) throw new Error('Failed to save artwork');
+
+                // ランダムな作品を取得
+                const exchangeResponse = await fetch('/api/artworks/exchange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ anonymousUserId: state.anonymousUserId }),
+                });
+
+                if (!exchangeResponse.ok) throw new Error('Failed to exchange artwork');
+
+                const exchangedArtwork = await exchangeResponse.json();
+
+                if (exchangedArtwork) {
+                    displayReceivedArtwork(exchangedArtwork);
+                } else {
+                    showError('他のユーザーの作品がまだありません');
+                }
+            } catch (error) {
+                console.error('Exchange error:', error);
+                showError('作品の交換に失敗しました');
+            } finally {
+                exchangeBtn.disabled = false;
+                statusMessage.style.display = 'none';
+            }
+        }
+
+        function displayReceivedArtwork(artwork) {
+            modalTitle.textContent = `「${artwork.title}」を受け取りました！`;
+            receivedCanvas.innerHTML = '';
+            receivedCanvas.classList.toggle('dark', artwork.isDarkBg);
+
+            const parsedStrokes = JSON.parse(artwork.strokesData);
+            parsedStrokes.forEach(pathData => {
+                pathData.chars.forEach(char => {
+                    const charEl = document.createElement('div');
+                    charEl.className = 'char-element';
+                    charEl.textContent = char.char;
+                    charEl.style.left = char.x + 'px';
+                    charEl.style.top = char.y + 'px';
+                    charEl.style.fontSize = char.fontSize + 'px';
+                    charEl.style.color = artwork.isDarkBg ? '#FFFFFF' : '#000000';
+                    charEl.style.transform = `translate(-50%, -50%) rotate(${char.rotation}deg)`;
+                    receivedCanvas.appendChild(charEl);
+                });
+            });
+
+            exchangeModal.classList.add('active');
+        }
+
+        function handleNext() {
+            state.textPaths = [];
+            state.undoStack = [];
+            state.redoStack = [];
+            titleInput.value = '';
+            exchangeModal.classList.remove('active');
+            updateButtonStates();
+            saveState();
+            redraw();
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== キーボードショートカット =====
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    handleRedo();
+                } else {
+                    handleUndo();
+                }
+            }
+        });
+
+        // ===== イベントリスナー登録 =====
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', handleMouseUp);
+
+        undoBtn.addEventListener('click', handleUndo);
+        redoBtn.addEventListener('click', handleRedo);
+        darkModeBtn.addEventListener('click', toggleDarkMode);
+        exchangeBtn.addEventListener('click', handleExchange);
+        clearBtn.addEventListener('click', handleClear);
+        nextBtn.addEventListener('click', handleNext);
+
+        // ===== 初期化 =====
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('beforeunload', () => saveState());
+
+        // アプリ起動
+        state.anonymousUserId = getOrCreateAnonymousUserId();
+        resizeCanvas();
+        restoreState();
+        updateButtonStates();
+    </script>
+</body>
+</html>
