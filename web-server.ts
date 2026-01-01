@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+// データベース操作関数をインポート 
+import { createArtwork, getRandomArtwork, getUserArtworks } from './server/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,63 +13,79 @@ const PORT = process.env.PORT || 3001;
 
 // ミドルウェア
 app.use(cors());
+// 描画データは大きくなる可能性があるため、limit: '50mb' を維持します
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== API エンドポイント =====
 
-// 作品を保存
+// 作品を保存 [cite: 26, 154-162]
 app.post('/api/artworks/save', async (req: Request, res: Response) => {
   try {
     const { anonymousUserId, title, strokesData, isDarkBg } = req.body;
 
     if (!anonymousUserId || !title || !strokesData) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: '必須項目が不足しています' });
     }
 
-    // TODO: データベースに保存
-    res.json({ id: Math.random(), success: true });
+    // データベースに保存を実行 [cite: 67-72]
+    const result = await createArtwork({
+      anonymousUserId,
+      title,
+      strokesData: typeof strokesData === 'string' ? strokesData : JSON.stringify(strokesData),
+      isDarkBg: isDarkBg ? 1 : 0,
+    });
+
+    res.json({ id: result[0].id, success: true });
   } catch (error) {
-    console.error('Error saving artwork:', error);
-    res.status(500).json({ error: 'Failed to save artwork' });
+    console.error('作品の保存中にエラーが発生しました:', error);
+    res.status(500).json({ error: '作品の保存に失敗しました' });
   }
 });
 
-// ランダムな作品を取得（交換用）
+// ランダムな作品を取得（交換用） [cite: 28, 165-176]
 app.post('/api/artworks/exchange', async (req: Request, res: Response) => {
   try {
     const { anonymousUserId } = req.body;
 
     if (!anonymousUserId) {
-      return res.status(400).json({ error: 'Missing anonymousUserId' });
+      return res.status(400).json({ error: 'anonymousUserIdが必要です' });
     }
 
-    // TODO: データベースからランダムに取得
-    res.json(null);
+    // データベースから自分以外の作品をランダムに取得 [cite: 73-74]
+    const artwork = await getRandomArtwork(anonymousUserId);
+    
+    if (artwork) {
+      res.json(artwork);
+    } else {
+      // まだ他人の作品がない場合
+      res.status(404).json({ error: '交換できる作品がまだありません' });
+    }
   } catch (error) {
-    console.error('Error exchanging artwork:', error);
-    res.status(500).json({ error: 'Failed to exchange artwork' });
+    console.error('作品の交換中にエラーが発生しました:', error);
+    res.status(500).json({ error: '作品の交換に失敗しました' });
   }
 });
 
-// ユーザーの作品一覧を取得
+// ユーザーの作品一覧を取得 [cite: 31, 179-187]
 app.get('/api/artworks/list/:userId', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
     if (!userId) {
-      return res.status(400).json({ error: 'Missing userId' });
+      return res.status(400).json({ error: 'userIdが必要です' });
     }
 
-    // TODO: データベースから取得
-    res.json([]);
+    // データベースから特定ユーザーの作品を取得 [cite: 75-77]
+    const artworks = await getUserArtworks(userId);
+    res.json(artworks);
   } catch (error) {
-    console.error('Error fetching artworks:', error);
-    res.status(500).json({ error: 'Failed to fetch artworks' });
+    console.error('一覧の取得中にエラーが発生しました:', error);
+    res.status(500).json({ error: '作品一覧の取得に失敗しました' });
   }
 });
 
-// ヘルスチェック
+// ヘルスチェック [cite: 31, 190-191]
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
@@ -79,8 +97,8 @@ app.get('*', (req: Request, res: Response) => {
 
 // エラーハンドリング
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Server error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('サーバーエラー:', err);
+  res.status(500).json({ error: '内部サーバーエラーが発生しました' });
 });
 
 // サーバー起動
