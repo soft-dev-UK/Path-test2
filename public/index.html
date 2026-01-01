@@ -741,6 +741,7 @@
                 darkModeBtn.textContent = '☀️';
             }
         }
+        
 
         // ===== クリア =====
         function handleClear() {
@@ -755,61 +756,74 @@
 
         // ===== 作品交換 =====
         async function handleExchange() {
-            if (!titleInput.value.trim()) {
-                showError('タイトルが必要です');
-                return;
-            }
+    // 1. 入力チェック
+    if (!titleInput.value.trim()) {
+        showError('タイトルを入力してください');
+        return;
+    }
 
-            if (state.textPaths.length === 0) {
-                showError('作品を描いてください');
-                return;
-            }
+    if (state.textPaths.length === 0) {
+        showError('作品を描いてください');
+        return;
+    }
 
-            exchangeBtn.disabled = true;
-            statusMessage.style.display = 'flex';
-            errorMessage.classList.remove('show');
+    // 2. ユーザーIDの確認（もし空なら生成する）
+    if (!state.anonymousUserId) {
+        state.anonymousUserId = 'user-' + Math.random().toString(36).substr(2, 9);
+        saveState();
+    }
 
-            try {
-                const strokesData = JSON.stringify(state.textPaths);
+    exchangeBtn.disabled = true;
+    statusMessage.style.display = 'flex';
+    errorMessage.classList.remove('show');
 
-                // 作品を保存
-                const saveResponse = await fetch('/api/artworks/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        anonymousUserId: state.anonymousUserId,
-                        title: titleInput.value,
-                        strokesData,
-                        isDarkBg: state.isDarkMode,
-                    }),
-                });
+    try {
+        const strokesData = JSON.stringify(state.textPaths);
 
-                if (!saveResponse.ok) throw new Error('Failed to save artwork');
+        // --- STEP A: 自分の作品を保存 ---
+        const saveResponse = await fetch('/api/artworks/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                anonymousUserId: state.anonymousUserId,
+                title: titleInput.value,
+                strokesData,
+                isDarkBg: state.isDarkMode ? 1 : 0, // 数値で送る
+            }),
+        });
 
-                // ランダムな作品を取得
-                const exchangeResponse = await fetch('/api/artworks/exchange', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ anonymousUserId: state.anonymousUserId }),
-                });
+        if (!saveResponse.ok) throw new Error('保存に失敗しました');
+        console.log('保存成功');
 
-                if (!exchangeResponse.ok) throw new Error('Failed to exchange artwork');
+        // --- STEP B: 作品を交換（取得） ---
+        const exchangeResponse = await fetch('/api/artworks/exchange', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ anonymousUserId: state.anonymousUserId }),
+        });
 
-                const exchangedArtwork = await exchangeResponse.json();
-
-                if (exchangedArtwork) {
-                    displayReceivedArtwork(exchangedArtwork);
-                } else {
-                    showError('他のユーザーの作品がまだありません');
-                }
-            } catch (error) {
-                console.error('Exchange error:', error);
-                showError('作品の交換に失敗しました');
-            } finally {
-                exchangeBtn.disabled = false;
-                statusMessage.style.display = 'none';
-            }
+        // 相手がいない場合(404)はエラーにせず、専用のメッセージを出す
+        if (exchangeResponse.status === 404) {
+            alert('あなたの作品を保存しました！まだ他の人の作品がないため、誰かが描いてくれるのを待ちましょう。');
+            return;
         }
+
+        if (!exchangeResponse.ok) throw new Error('交換に失敗しました');
+
+        const exchangedArtwork = await exchangeResponse.json();
+
+        if (exchangedArtwork) {
+            displayReceivedArtwork(exchangedArtwork);
+        }
+
+    } catch (error) {
+        console.error('Exchange error:', error);
+        showError('通信エラーが発生しました。インターネット接続やサーバーの状態を確認してください。');
+    } finally {
+        exchangeBtn.disabled = false;
+        statusMessage.style.display = 'none';
+    }
+}
 
         function displayReceivedArtwork(artwork) {
             modalTitle.textContent = `「${artwork.title}」を受け取りました！`;

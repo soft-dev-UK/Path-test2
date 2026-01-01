@@ -1,6 +1,6 @@
 // server/db.ts
-import { db } from './index'; // 接続設定
-import { artworks } from './schema';
+import { db } from './index.js'; // 接続設定
+import { artworks } from './schema.js';
 import { eq, ne, sql } from 'drizzle-orm';
 
 // 1. 作品を保存する [cite: 67-72]
