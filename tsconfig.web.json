@@ -16,3 +16,15 @@
   "include": ["web-server.ts", "server/**/*.ts"],
   "exclude": ["node_modules", "app", "dist"]
 }
+
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true
+  }
+}
