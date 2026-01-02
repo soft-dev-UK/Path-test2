@@ -117,6 +117,20 @@
             cursor: pointer;
         }
 
+        /* 削除（Clear）ボタンの色を確実に設定 */
+        .btn-clear {
+            background: #FF3B30 !important; /* 赤色 */
+            color: white !important;
+            flex: 1 !important;
+            display: flex !important;
+        }
+
+/* 交換ボタンの色 */
+        .btn-exchange {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%) !important;
+            color: white !important;
+        }
+
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
