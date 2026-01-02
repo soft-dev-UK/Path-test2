@@ -12,9 +12,12 @@
         }
 
         body {
-            background: #121212; /* 背景を暗くして没入感を出す */
+            width: 100vw;
             height: 100dvh; /* dynamic viewport height (スマホのバーを考慮) */
             overflow: hidden; /* 画面全体のスクロールを禁止 */
+            margin: 0;
+            padding: 0;
+            position: fixed;
         }
 
         canvas {
@@ -24,13 +27,11 @@
         }
 
         .container {
-            width: 100%;
-            max-width: 500px;
+            display: flex;
+            flex-direction: column;
             height: 100dvh;
-            display: flex;         /* これを追加 */
-            flex-direction: column; /* これを追加 */
-            background: #1a1a1a;    /* ヘッダーと色を合わせると綺麗です */
-            overflow: hidden;
+            width: 100%;
+            background: #121212;
         }
 
         .header {
@@ -67,10 +68,9 @@
         .canvas-wrapper {
             flex: 1;                /* 余ったスペースをすべて使う */
             min-height: 0;          /* これ重要：中身がはみ出すのを防ぐ */
-            margin: 10px;
+            margin: 8px;
             border-radius: 12px;
             background: #fff;
-            position: relative;
             overflow: hidden;
         }
 
@@ -85,13 +85,15 @@
         }
 
         .toolbar {
-            display: flex;
-            flex-direction: column; /* グループ（段）を縦に並べる */
-            gap: 8px;               /* 段ごとの隙間 */
-            padding: 10px 15px 25px 10px; /* 下側の余白を多めにとってスマホのバーを避ける */
+            flex-shrink: 0;   /* ボタンエリアは絶対に潰さない */
             background: #f9f9f9;
+            padding: 10px 10px;
+            /* ★重要：iPhoneやAndroidの下部バーを避けるための余白 */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             border-top: 1px solid #ddd;
-            flex-shrink: 0;
         }   
 
         .button-group {
@@ -145,10 +147,9 @@
             cursor: not-allowed;
         }
 
-        .btn-undo, .btn-redo, .btn-dark-mode, 
-.btn-exchange, .btn-clear, .btn-save {
-    min-width: 0 !important; 
-    flex: 1;
+        .btn-undo, .btn-redo, .btn-dark-mode, .btn-exchange, .btn-clear, .btn-save {
+        min-width: 0 !important; 
+        flex: 1;
 }
 
         .button-group:first-child button {
