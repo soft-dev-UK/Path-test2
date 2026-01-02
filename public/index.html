@@ -21,6 +21,12 @@
             padding: 20px;
         }
 
+        canvas {
+    /* キャンバス上でのスマホ特有の動作（スクロールやズーム）を無効化する */
+            touch-action: none;
+            cursor: crosshair;
+        }
+
         .container {
             width: 100%;
             max-width: 900px;
@@ -589,58 +595,74 @@
         }
 
         // ===== イベントハンドラ =====
-        function handleMouseDown(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const now = Date.now();
+// マウスや指が「キャンバス内のどこにいるか」を正確に計算する関数
+        // 座標取得の共通関数
+function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
 
-            state.isDrawing = true;
-            state.isStrokeFinalized = false;
-            state.currentStroke = {
-                points: [{ x, y, timestamp: now }],
-                startTime: now,
-                endTime: now,
-            };
-            state.currentChars = [];
-            state.strokeStartTime = now;
-            state.lastUpdateTime = now;
+// 描き始め（ポインター版）
+function handlePointerDown(e) {
+    // 指で触った時に画面が動くのを防止
+    if (e.pointerType === 'touch') e.preventDefault();
 
-            startAnimationLoop();
-        }
+    const pos = getMousePos(e);
+    const now = Date.now();
 
-        function handleMouseMove(e) {
-            if (!state.isDrawing || !state.currentStroke) return;
+    state.isDrawing = true;
+    state.isStrokeFinalized = false;
+    state.currentStroke = {
+        points: [{ x: pos.x, y: pos.y, timestamp: now }],
+        startTime: now,
+        endTime: now,
+    };
+    state.currentChars = [];
+    state.strokeStartTime = now;
+    state.lastUpdateTime = now;
 
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const now = Date.now();
+    startAnimationLoop();
+}
 
-            state.currentStroke.points.push({ x, y, timestamp: now });
-            state.currentStroke.endTime = now;
-        }
+// 描いている最中（ポインター版）
+function handlePointerMove(e) {
+    if (!state.isDrawing || !state.currentStroke) return;
 
-        function handleMouseUp() {
-            if (state.isDrawing && state.currentStroke && state.currentStroke.points.length > 1 && textInput.value.trim()) {
-                const strokeDuration = Math.max(state.currentStroke.endTime - state.currentStroke.startTime, 1);
-                const minFontSize = 12;
-                const maxFontSize = 60;
-                const durationFactor = Math.min(strokeDuration / 2000, 1);
-                const finalFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
+    const pos = getMousePos(e);
+    const now = Date.now();
 
-                const chars = calculateCharPositions(
-                    state.currentStroke.points,
-                    textInput.value,
-                    state.isDarkMode,
-                    state.currentStroke.startTime,
-                    state.currentStroke.endTime,
-                    finalFontSize
-                );
+    state.currentStroke.points.push({ x: pos.x, y: pos.y, timestamp: now });
+    state.currentStroke.endTime = now;
+}
 
-                const newTextPaths = [...state.textPaths, { chars, isDark: state.isDarkMode }];
-                saveToUndoStack(newTextPaths);
-            }
+// 描き終わり（ポインター版）
+function handlePointerUp() {
+    if (state.isDrawing && state.currentStroke && state.currentStroke.points.length > 1 && textInput.value.trim()) {
+        const strokeDuration = Math.max(state.currentStroke.endTime - state.currentStroke.startTime, 1);
+        const minFontSize = 12;
+        const maxFontSize = 60;
+        const durationFactor = Math.min(strokeDuration / 2000, 1);
+        const finalFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
+
+        const chars = calculateCharPositions(
+            state.currentStroke.points,
+            textInput.value,
+            state.isDarkMode,
+            state.currentStroke.startTime,
+            state.currentStroke.endTime,
+            finalFontSize
+        );
+
+        const newTextPaths = [...state.textPaths, { chars, isDark: state.isDarkMode }];
+        saveToUndoStack(newTextPaths);
+    }
+    // 状態をリセット
+    state.isDrawing = false;
+    state.currentStroke = null;
+}
 
             state.isDrawing = false;
             state.isStrokeFinalized = true;
@@ -880,10 +902,10 @@
         });
 
         // ===== イベントリスナー登録 =====
-        canvas.addEventListener('mousedown', handleMouseDown);
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mouseup', handleMouseUp);
-        canvas.addEventListener('mouseleave', handleMouseUp);
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointerout', stopDrawing);
 
         undoBtn.addEventListener('click', handleUndo);
         redoBtn.addEventListener('click', handleRedo);
