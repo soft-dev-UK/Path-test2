@@ -24,10 +24,13 @@
         }
 
         .container {
-            max-width: 500px; /* スマホの横幅に合わせる */
+            width: 100%;
+            max-width: 500px;
             height: 100dvh;
-            border-radius: 0; /* スマホでは角丸をなくしてフル画面に */
-            box-shadow: none;
+            display: flex;         /* これを追加 */
+            flex-direction: column; /* これを追加 */
+            background: #1a1a1a;    /* ヘッダーと色を合わせると綺麗です */
+            overflow: hidden;
         }
 
         .header {
@@ -41,19 +44,14 @@
 
         .input-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+            flex-direction: column; /* 縦に並べて横幅を稼ぐ */
+            gap: 5px;               /* 隙間を狭く */
+            margin-bottom: 5px;
         }
 
         .input-group input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            padding: 8px 12px;      /* 入力欄を少しスリムに */
             font-size: 14px;
-            transition: all 0.3s ease;
         }
 
         .input-group input::placeholder {
@@ -67,15 +65,13 @@
         }
 
         .canvas-wrapper {
-            flex: 1;
-            margin: 10px; /* 余白を小さく */
-            border-radius: 15px;
+            flex: 1;                /* 余ったスペースをすべて使う */
+            min-height: 0;          /* これ重要：中身がはみ出すのを防ぐ */
+            margin: 10px;
+            border-radius: 12px;
             background: #fff;
-            /* ここがポイント：スマホで描きやすいアスペクト比にする */
-            aspect-ratio: 3 / 4; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative;
+            overflow: hidden;
         }
 
         canvas {
@@ -89,33 +85,26 @@
         }
 
         .toolbar {
-            display: flex;
-            gap: 10px;
-            padding: 20px;
+            padding: 10px 15px 25px 15px; /* 下側に少し余裕（スマホのバー避け） */
             background: #f9f9f9;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: flex;
+            flex-direction: column; /* ボタンを2行に分ける */
+            gap: 8px;
             border-top: 1px solid #e0e0e0;
-        }
+        }   
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            width: 100%;
         }
 
         button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
+            flex: 1;                /* ボタンが横に並ぶように */
+            min-width: 0;           /* min-width: 100pxなどは消す */
+            padding: 10px 5px;
             font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 100px;
-            justify-content: center;
+            height: 44px;
         }
 
         button:hover:not(:disabled) {
