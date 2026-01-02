@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 // データベース操作関数をインポート 
-import { createArtwork, getRandomArtwork, getUserArtworks } from './server/db.js';
+import { saveArtwork, exchangeArtwork } from './server/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,7 +29,8 @@ app.post('/api/artworks/save', async (req: Request, res: Response) => {
     }
 
     // データベースに保存を実行 [cite: 67-72]
-    const result = await createArtwork({
+    // 関数名を saveArtwork に変更します
+    const result = await saveArtwork({
       anonymousUserId,
       title,
       strokesData: typeof strokesData === 'string' ? strokesData : JSON.stringify(strokesData),
@@ -53,7 +54,8 @@ app.post('/api/artworks/exchange', async (req: Request, res: Response) => {
     }
 
     // データベースから自分以外の作品をランダムに取得 [cite: 73-74]
-    const artwork = await getRandomArtwork(anonymousUserId);
+    // 関数名を exchangeArtwork に変更します
+    const artwork = await exchangeArtwork(anonymousUserId);
     
     if (artwork) {
       res.json(artwork);
@@ -77,7 +79,7 @@ app.get('/api/artworks/list/:userId', async (req: Request, res: Response) => {
     }
 
     // データベースから特定ユーザーの作品を取得 [cite: 75-77]
-    const artworks = await getUserArtworks(userId);
+    const artworks = await exchangeArtwork(userId);
     res.json(artworks);
   } catch (error) {
     console.error('一覧の取得中にエラーが発生しました:', error);

@@ -1,0 +1,8 @@
+{
+  "schema": "./server/schema.ts",
+  "out": "./drizzle",
+  "dialect": "postgresql",
+  "dbCredentials": {
+    "url": "postgresql://postgres.prjisilfxrobgbietvjf:PTyFXXgbcLSHa14g@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
+  }
+}
