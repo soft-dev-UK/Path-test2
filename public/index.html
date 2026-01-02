@@ -473,14 +473,12 @@
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 保存されたテキストパスを描画
             state.textPaths.forEach(pathData => {
                 pathData.chars.forEach(char => {
                     drawChar(char, pathData.isDark);
                 });
             });
 
-            // 現在のストロークを描画
             state.currentChars.forEach(char => {
                 drawChar(char, state.isDarkMode);
             });
@@ -511,34 +509,18 @@
 
         function calculateCharPositions(points, text, isDark, startTime, endTime, forcedFontSize) {
             if (points.length < 1 || !text) return [];
-
             const chars = [];
             const totalLength = calculatePathLength(points);
             const charCount = text.length;
             const strokeDuration = Math.max(endTime - startTime, 1);
-
             const spacing = totalLength > 0 ? totalLength / Math.max(charCount, 1) : 0;
 
-            let baseFontSize;
-            if (forcedFontSize !== undefined) {
-                baseFontSize = forcedFontSize;
-            } else {
-                const minFontSize = 12;
-                const maxFontSize = 60;
-                const durationFactor = Math.min(strokeDuration / 2000, 1);
-                baseFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
-            }
+            let baseFontSize = forcedFontSize || (12 + (60 - 12) * Math.min(strokeDuration / 2000, 1));
 
             if (points.length < 2) {
                 const point = points[0];
                 for (let i = 0; i < charCount; i++) {
-                    chars.push({
-                        char: text[i],
-                        x: point.x,
-                        y: point.y,
-                        rotation: 0,
-                        fontSize: baseFontSize,
-                    });
+                    chars.push({ char: text[i], x: point.x, y: point.y, rotation: 0, fontSize: baseFontSize });
                 }
                 return chars;
             }
@@ -549,121 +531,73 @@
             for (let i = 0; i < points.length - 1 && charIndex < charCount; i++) {
                 const p1 = points[i];
                 const p2 = points[i + 1];
-                const segmentLength = Math.sqrt(
-                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
-                );
+                const segmentLength = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
-                while (
-                    accumulatedLength < (charIndex + 1) * spacing &&
-                    charIndex < charCount
-                ) {
+                while (accumulatedLength < (charIndex + 1) * spacing && charIndex < charCount) {
                     const t = segmentLength > 0 ? ((charIndex + 1) * spacing - accumulatedLength) / segmentLength : 0;
                     if (t > 1) break;
-
                     const x = p1.x + (p2.x - p1.x) * t;
                     const y = p1.y + (p2.y - p1.y) * t;
                     const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-
-                    chars.push({
-                        char: text[charIndex],
-                        x,
-                        y,
-                        rotation: (angle * 180) / Math.PI,
-                        fontSize: baseFontSize,
-                    });
-
+                    chars.push({ char: text[charIndex], x, y, rotation: (angle * 180) / Math.PI, fontSize: baseFontSize });
                     charIndex++;
                 }
-
                 accumulatedLength += segmentLength;
             }
-
-            if (charIndex < charCount) {
-                const lastPoint = points[points.length - 1];
-                for (let i = charIndex; i < charCount; i++) {
-                    chars.push({
-                        char: text[i],
-                        x: lastPoint.x,
-                        y: lastPoint.y,
-                        rotation: 0,
-                        fontSize: baseFontSize,
-                    });
-                }
-            }
-
             return chars;
         }
 
-        // ===== イベントハンドラ =====
-// マウスや指が「キャンバス内のどこにいるか」を正確に計算する関数
-        // 座標取得の共通関数
-function getMousePos(e) {
-    const rect = canvas.getBoundingClientRect();
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
-}
+        // ===== スマホ・PC共通の描画処理 =====
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
 
-// 描き始め（ポインター版）
-function handlePointerDown(e) {
-    // 指で触った時に画面が動くのを防止
-    if (e.pointerType === 'touch') e.preventDefault();
+        function handlePointerDown(e) {
+            if (e.pointerType === 'touch') e.preventDefault();
+            const pos = getMousePos(e);
+            const now = Date.now();
 
-    const pos = getMousePos(e);
-    const now = Date.now();
+            state.isDrawing = true;
+            state.isStrokeFinalized = false;
+            state.currentStroke = {
+                points: [{ x: pos.x, y: pos.y, timestamp: now }],
+                startTime: now,
+                endTime: now,
+            };
+            state.currentChars = [];
+            state.strokeStartTime = now;
+            state.lastUpdateTime = now;
 
-    state.isDrawing = true;
-    state.isStrokeFinalized = false;
-    state.currentStroke = {
-        points: [{ x: pos.x, y: pos.y, timestamp: now }],
-        startTime: now,
-        endTime: now,
-    };
-    state.currentChars = [];
-    state.strokeStartTime = now;
-    state.lastUpdateTime = now;
+            startAnimationLoop();
+        }
 
-    startAnimationLoop();
-}
+        function handlePointerMove(e) {
+            if (!state.isDrawing || !state.currentStroke) return;
+            const pos = getMousePos(e);
+            const now = Date.now();
+            state.currentStroke.points.push({ x: pos.x, y: pos.y, timestamp: now });
+            state.currentStroke.endTime = now;
+        }
 
-// 描いている最中（ポインター版）
-function handlePointerMove(e) {
-    if (!state.isDrawing || !state.currentStroke) return;
+        function handlePointerUp() {
+            if (state.isDrawing && state.currentStroke && state.currentStroke.points.length > 1 && textInput.value.trim()) {
+                const chars = calculateCharPositions(
+                    state.currentStroke.points,
+                    textInput.value,
+                    state.isDarkMode,
+                    state.currentStroke.startTime,
+                    state.currentStroke.endTime,
+                    undefined
+                );
+                const newTextPaths = [...state.textPaths, { chars, isDark: state.isDarkMode }];
+                saveToUndoStack(newTextPaths);
+            }
 
-    const pos = getMousePos(e);
-    const now = Date.now();
-
-    state.currentStroke.points.push({ x: pos.x, y: pos.y, timestamp: now });
-    state.currentStroke.endTime = now;
-}
-
-// 描き終わり（ポインター版）
-function handlePointerUp() {
-    if (state.isDrawing && state.currentStroke && state.currentStroke.points.length > 1 && textInput.value.trim()) {
-        const strokeDuration = Math.max(state.currentStroke.endTime - state.currentStroke.startTime, 1);
-        const minFontSize = 12;
-        const maxFontSize = 60;
-        const durationFactor = Math.min(strokeDuration / 2000, 1);
-        const finalFontSize = minFontSize + (maxFontSize - minFontSize) * durationFactor;
-
-        const chars = calculateCharPositions(
-            state.currentStroke.points,
-            textInput.value,
-            state.isDarkMode,
-            state.currentStroke.startTime,
-            state.currentStroke.endTime,
-            finalFontSize
-        );
-
-        const newTextPaths = [...state.textPaths, { chars, isDark: state.isDarkMode }];
-        saveToUndoStack(newTextPaths);
-    }
-    // 状態をリセット
-    state.isDrawing = false;
-    state.currentStroke = null;
-}
-
+            // 状態のリセット
             state.isDrawing = false;
             state.isStrokeFinalized = true;
             state.currentStroke = null;
@@ -673,22 +607,18 @@ function handlePointerUp() {
                 cancelAnimationFrame(state.animationFrameId);
                 state.animationFrameId = null;
             }
-
             redraw();
+        }
 
         function startAnimationLoop() {
             const updateFrame = () => {
                 const now = Date.now();
-
                 if (now - state.lastUpdateTime < 16) {
                     state.animationFrameId = requestAnimationFrame(updateFrame);
                     return;
                 }
-
                 state.lastUpdateTime = now;
-
                 if (state.currentStroke) {
-                    state.currentStroke.endTime = now;
                     state.currentChars = calculateCharPositions(
                         state.currentStroke.points,
                         textInput.value,
@@ -699,10 +629,8 @@ function handlePointerUp() {
                     );
                     redraw();
                 }
-
                 state.animationFrameId = requestAnimationFrame(updateFrame);
             };
-
             state.animationFrameId = requestAnimationFrame(updateFrame);
         }
 
@@ -718,7 +646,6 @@ function handlePointerUp() {
 
         function handleUndo() {
             if (state.undoStack.length === 0) return;
-
             const previousState = state.undoStack.pop();
             state.redoStack.push({ textPaths: state.textPaths });
             state.textPaths = previousState.textPaths;
@@ -729,7 +656,6 @@ function handlePointerUp() {
 
         function handleRedo() {
             if (state.redoStack.length === 0) return;
-
             const nextState = state.redoStack.pop();
             state.undoStack.push({ textPaths: state.textPaths });
             state.textPaths = nextState.textPaths;
@@ -762,95 +688,60 @@ function handlePointerUp() {
                 darkModeBtn.textContent = '☀️';
             }
         }
-        
 
         // ===== クリア =====
         function handleClear() {
-            if (state.textPaths.length > 0) {
-                saveToUndoStack([]);
-            }
+            if (state.textPaths.length > 0) saveToUndoStack([]);
             state.currentStroke = null;
             state.currentChars = [];
-            state.isStrokeFinalized = false;
             redraw();
         }
 
         // ===== 作品交換 =====
         async function handleExchange() {
-    // 1. 入力チェック
-    if (!titleInput.value.trim()) {
-        showError('タイトルを入力してください');
-        return;
-    }
+            if (!titleInput.value.trim() || state.textPaths.length === 0) {
+                showError('タイトルを入力し、作品を描いてください');
+                return;
+            }
+            exchangeBtn.disabled = true;
+            statusMessage.style.display = 'flex';
+            try {
+                const saveResponse = await fetch('/api/artworks/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        anonymousUserId: state.anonymousUserId,
+                        title: titleInput.value,
+                        strokesData: JSON.stringify(state.textPaths),
+                        isDarkBg: state.isDarkMode ? 1 : 0,
+                    }),
+                });
+                if (!saveResponse.ok) throw new Error('保存失敗');
 
-    if (state.textPaths.length === 0) {
-        showError('作品を描いてください');
-        return;
-    }
+                const exchangeResponse = await fetch('/api/artworks/exchange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ anonymousUserId: state.anonymousUserId }),
+                });
 
-    // 2. ユーザーIDの確認（もし空なら生成する）
-    if (!state.anonymousUserId) {
-        state.anonymousUserId = 'user-' + Math.random().toString(36).substr(2, 9);
-        saveState();
-    }
-
-    exchangeBtn.disabled = true;
-    statusMessage.style.display = 'flex';
-    errorMessage.classList.remove('show');
-
-    try {
-        const strokesData = JSON.stringify(state.textPaths);
-
-        // --- STEP A: 自分の作品を保存 ---
-        const saveResponse = await fetch('/api/artworks/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                anonymousUserId: state.anonymousUserId,
-                title: titleInput.value,
-                strokesData,
-                isDarkBg: state.isDarkMode ? 1 : 0, // 数値で送る
-            }),
-        });
-
-        if (!saveResponse.ok) throw new Error('保存に失敗しました');
-        console.log('保存成功');
-
-        // --- STEP B: 作品を交換（取得） ---
-        const exchangeResponse = await fetch('/api/artworks/exchange', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ anonymousUserId: state.anonymousUserId }),
-        });
-
-        // 相手がいない場合(404)はエラーにせず、専用のメッセージを出す
-        if (exchangeResponse.status === 404) {
-            alert('あなたの作品を保存しました！まだ他の人の作品がないため、誰かが描いてくれるのを待ちましょう。');
-            return;
+                if (exchangeResponse.status === 404) {
+                    alert('保存完了！まだ他の作品がないので待機しましょう。');
+                } else {
+                    const artwork = await exchangeResponse.json();
+                    displayReceivedArtwork(artwork);
+                }
+            } catch (error) {
+                showError('通信エラーが発生しました');
+            } finally {
+                exchangeBtn.disabled = false;
+                statusMessage.style.display = 'none';
+            }
         }
-
-        if (!exchangeResponse.ok) throw new Error('交換に失敗しました');
-
-        const exchangedArtwork = await exchangeResponse.json();
-
-        if (exchangedArtwork) {
-            displayReceivedArtwork(exchangedArtwork);
-        }
-
-    } catch (error) {
-        console.error('Exchange error:', error);
-        showError('通信エラーが発生しました。インターネット接続やサーバーの状態を確認してください。');
-    } finally {
-        exchangeBtn.disabled = false;
-        statusMessage.style.display = 'none';
-    }
-}
 
         function displayReceivedArtwork(artwork) {
             modalTitle.textContent = `「${artwork.title}」を受け取りました！`;
             receivedCanvas.innerHTML = '';
-            receivedCanvas.classList.toggle('dark', artwork.isDarkBg);
-
+            receivedCanvas.classList.toggle('dark', artwork.isDarkBg == 1);
             const parsedStrokes = JSON.parse(artwork.strokesData);
             parsedStrokes.forEach(pathData => {
                 pathData.chars.forEach(char => {
@@ -860,12 +751,11 @@ function handlePointerUp() {
                     charEl.style.left = char.x + 'px';
                     charEl.style.top = char.y + 'px';
                     charEl.style.fontSize = char.fontSize + 'px';
-                    charEl.style.color = artwork.isDarkBg ? '#FFFFFF' : '#000000';
+                    charEl.style.color = artwork.isDarkBg == 1 ? '#FFFFFF' : '#000000';
                     charEl.style.transform = `translate(-50%, -50%) rotate(${char.rotation}deg)`;
                     receivedCanvas.appendChild(charEl);
                 });
             });
-
             exchangeModal.classList.add('active');
         }
 
@@ -883,28 +773,14 @@ function handlePointerUp() {
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.classList.add('show');
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 3000);
+            setTimeout(() => errorMessage.classList.remove('show'), 3000);
         }
 
-        // ===== キーボードショートカット =====
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-                e.preventDefault();
-                if (e.shiftKey) {
-                    handleRedo();
-                } else {
-                    handleUndo();
-                }
-            }
-        });
-
         // ===== イベントリスナー登録 =====
-        canvas.addEventListener('pointerdown', startDrawing);
-        canvas.addEventListener('pointermove', draw);
-        canvas.addEventListener('pointerup', stopDrawing);
-        canvas.addEventListener('pointerout', stopDrawing);
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointermove', handlePointerMove);
+        canvas.addEventListener('pointerup', handlePointerUp);
+        canvas.addEventListener('pointerout', handlePointerUp);
 
         undoBtn.addEventListener('click', handleUndo);
         redoBtn.addEventListener('click', handleRedo);
@@ -913,15 +789,19 @@ function handlePointerUp() {
         clearBtn.addEventListener('click', handleClear);
         nextBtn.addEventListener('click', handleNext);
 
-        // ===== 初期化 =====
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('beforeunload', () => saveState());
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                e.shiftKey ? handleRedo() : handleUndo();
+            }
+        });
 
+        window.addEventListener('resize', resizeCanvas);
+        
         // アプリ起動
         state.anonymousUserId = getOrCreateAnonymousUserId();
         resizeCanvas();
         restoreState();
-        updateButtonStates();
     </script>
 </body>
 </html>
