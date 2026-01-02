@@ -85,26 +85,36 @@
         }
 
         .toolbar {
-            padding: 10px 15px 25px 15px; /* 下側に少し余裕（スマホのバー避け） */
-            background: #f9f9f9;
             display: flex;
-            flex-direction: column; /* ボタンを2行に分ける */
-            gap: 8px;
-            border-top: 1px solid #e0e0e0;
+            flex-direction: column; /* グループ（段）を縦に並べる */
+            gap: 8px;               /* 段ごとの隙間 */
+            padding: 10px 15px 25px 15px; /* 下側の余白を多めにとってスマホのバーを避ける */
+            background: #f9f9f9;
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
         }   
 
         .button-group {
             display: flex;
+            flex-direction: row;
             gap: 8px;
             width: 100%;
         }
 
         button {
-            flex: 1;                /* ボタンが横に並ぶように */
-            min-width: 0;           /* min-width: 100pxなどは消す */
-            padding: 10px 5px;
-            font-size: 14px;
-            height: 44px;
+            flex: 1;                /* ★重要：横幅を等分に分かち合う */
+            min-width: 0;           /* ★重要：これがないと横に並びきれない */
+            height: 44px;           /* 指で押しやすい高さ */
+            padding: 0 5px;         /* 左右の余白を最小限にして文字入りを良くする */
+            font-size: 13px;        /* 3つ並ぶ上段のために少しだけ小さく */
+        white-space: nowrap;    /* 文字を改行させない */
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
 
         button:hover:not(:disabled) {
