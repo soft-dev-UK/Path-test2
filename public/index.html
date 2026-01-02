@@ -88,33 +88,33 @@
             display: flex;
             flex-direction: column; /* グループ（段）を縦に並べる */
             gap: 8px;               /* 段ごとの隙間 */
-            padding: 10px 15px 25px 15px; /* 下側の余白を多めにとってスマホのバーを避ける */
+            padding: 10px 15px 25px 10px; /* 下側の余白を多めにとってスマホのバーを避ける */
             background: #f9f9f9;
             border-top: 1px solid #ddd;
             flex-shrink: 0;
         }   
 
         .button-group {
-            display: flex;
-            flex-direction: row;
+            display: flex !important;
+            flex-direction: row !important;
             gap: 8px;
             width: 100%;
         }
 
         button {
             flex: 1;                /* ★重要：横幅を等分に分かち合う */
-            min-width: 0;           /* ★重要：これがないと横に並びきれない */
+            min-width: 0 !important;           /* ★重要：これがないと横に並びきれない */
             height: 44px;           /* 指で押しやすい高さ */
-            padding: 0 5px;         /* 左右の余白を最小限にして文字入りを良くする */
+            padding: 0 4px;         /* 左右の余白を最小限にして文字入りを良くする */
             font-size: 13px;        /* 3つ並ぶ上段のために少しだけ小さく */
-        white-space: nowrap;    /* 文字を改行させない */
+            white-space: nowrap;    /* 文字を改行させない */
             border: none;
             border-radius: 8px;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            cursor: pointer;
         }
 
         button:hover:not(:disabled) {
@@ -131,47 +131,15 @@
             cursor: not-allowed;
         }
 
-        .btn-undo {
-            background: #4CAF50;
-            color: white;
-            font-size: 18px;
-        }
+        .btn-undo, .btn-redo, .btn-dark-mode, 
+.btn-exchange, .btn-clear, .btn-save {
+    min-width: 0 !important; 
+    flex: 1;
+}
 
-        .btn-redo {
-            background: #4CAF50;
-            color: white;
-            font-size: 18px;
-        }
-
-        .btn-dark-mode {
-            background: #FFC107;
-            color: white;
-            font-size: 18px;
-        }
-
-        .btn-dark-mode.active {
-            background: #2196F3;
-        }
-
-        .btn-exchange {
-            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
-            color: white;
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .btn-clear {
-            background: #FF3B30;
-            color: white;
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .btn-save {
-            background: #007AFF;
-            color: white;
-            flex: 1;
-            min-width: 150px;
+        .button-group:first-child button {
+    /* 3つ並ぶ方は少しだけ文字を小さくして余裕を持たせる */
+            font-size: 12px;
         }
 
         /* モーダル */
