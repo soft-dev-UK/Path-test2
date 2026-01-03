@@ -215,7 +215,7 @@
             border-radius: 12px;
             margin-bottom: 20px;
             background: white;
-            position: relative;
+            position: relative !important;
             overflow: hidden;
         }
 
@@ -224,10 +224,11 @@
         }
 
         .char-element {
-            position: absolute;
+            position: absolute !important;
             font-weight: 600;
             white-space: nowrap;
             transform-origin: center;
+            pointer-events: none;
         }
 
         .status-message {
@@ -710,38 +711,38 @@
         }
 
         function displayReceivedArtwork(artwork) {
-    modalTitle.textContent = `「${artwork.title}」を受け取りました！`;
-    receivedCanvas.innerHTML = '';
-    receivedCanvas.classList.toggle('dark', artwork.isDarkBg == 1);
+            exchangeModal.classList.add('active');
+            modalTitle.textContent = `「${artwork.title}」を受け取りました！`;
+            receivedCanvas.innerHTML = '';
+            receivedCanvas.classList.toggle('dark', artwork.isDarkBg == 1);
     
-    const parsedStrokes = JSON.parse(artwork.strokesData);
+            const parsedStrokes = JSON.parse(artwork.strokesData);
     
-    // 1. 作品全体の範囲（バウンディングボックス）を計算
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    parsedStrokes.forEach(pathData => {
-        pathData.chars.forEach(char => {
-            minX = Math.min(minX, char.x);
-            maxX = Math.max(maxX, char.x);
-            minY = Math.min(minY, char.y);
-            maxY = Math.max(maxY, char.y);
-        });
-    });
+            // 1. 作品全体の範囲（バウンディングボックス）を計算
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            parsedStrokes.forEach(pathData => {
+                pathData.chars.forEach(char => {
+                    minX = Math.min(minX, char.x);
+                    maxX = Math.max(maxX, char.x);
+                    minY = Math.min(minY, char.y);
+                    maxY = Math.max(maxY, char.y);
+                });
+            });
 
     // 作品の幅と高さを算出（少し余白を持たせる）
     const artworkWidth = (maxX - minX) || 1;
     const artworkHeight = (maxY - minY) || 1;
-    const padding = 40; // プレビュー枠内の余白
-
-    // 2. プレビュー枠のサイズを取得
-    const previewWidth = receivedCanvas.clientWidth - padding;
-    const previewHeight = receivedCanvas.clientHeight - padding;
+    const rect = receivedCanvas.getBoundingClientRect();
+    const padding = 30; // プレビュー枠内の余白
+    const targetW = rect.width - padding;
+    const targetH = rect.height - padding;
 
     // 3. 縮小率（スケール）を計算（縦横のうち、よりはみ出す方に合わせる）
-    const scale = Math.min(previewWidth / artworkWidth, previewHeight / artworkHeight, 1);
+    const scale = Math.min(targetW / artworkWidth, targetH / artworkHeight, 1);
 
     // 4. 中心に配置するためのオフセット計算
-    const offsetX = (receivedCanvas.clientWidth - artworkWidth * scale) / 2 - minX * scale;
-    const offsetY = (receivedCanvas.clientHeight - artworkHeight * scale) / 2 - minY * scale;
+    const finalX = (rect.width - artworkWidth * scale) / 2;
+    const finalY = (rect.height - artworkHeight * scale) / 2;
 
     // 5. スケールを適用して描画
     parsedStrokes.forEach(pathData => {
@@ -751,10 +752,8 @@
             charEl.textContent = char.char;
             
             // 座標をスケールに合わせて変換
-            charEl.style.left = (char.x * scale + offsetX) + 'px';
-            charEl.style.top = (char.y * scale + offsetY) + 'px';
-            
-            // 文字サイズもスケールに合わせて縮小
+            charEl.style.left = ((char.x - minX) * scale + finalX) + 'px';
+            charEl.style.top = ((char.y - minY) * scale + finalY) + 'px';
             charEl.style.fontSize = (char.fontSize * scale) + 'px';
             
             charEl.style.color = artwork.isDarkBg == 1 ? '#FFFFFF' : '#000000';
