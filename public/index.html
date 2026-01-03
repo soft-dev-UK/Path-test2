@@ -210,7 +210,6 @@
 
         .received-canvas {
             width: 100%;
-            height: 350px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             margin-bottom: 20px;
@@ -716,6 +715,8 @@
             receivedCanvas.innerHTML = '';
             receivedCanvas.classList.toggle('dark', artwork.isDarkBg == 1);
     
+            const originalRatio = canvas.height / canvas.width;
+            receivedCanvas.style.height = (receivedCanvas.clientWidth * originalRatio) + 'px';
             const parsedStrokes = JSON.parse(artwork.strokesData);
     
             // 1. 作品全体の範囲（バウンディングボックス）を計算
