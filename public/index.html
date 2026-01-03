@@ -52,8 +52,18 @@
         }
 
         .input-group input {
-            padding: 8px 12px;      /* 入力欄を少しスリムに */
-            font-size: 14px;
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            /* ★ここが重要：背景を常に白、文字を常に黒にする */
+            background-color: #ffffff !important; 
+            color: #000000 !important;
+    
+            font-size: 16px; /* スマホでズームされないためのサイズ */
+            transition: border-color 0.3s;
+            outline: none;
+            -webkit-appearance: none;
         }
 
         .input-group input::placeholder {
@@ -62,8 +72,20 @@
 
         .input-group input:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.6);
+            background-color: #ffffff !important;
+            border-color:  #667eea;
+            color: #000000 !important;
+        }
+
+        .input-group input::placeholder {
+            color: #999999 !important; /* 白背景で見やすいグレー */
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #000000 !important;
         }
 
         .canvas-wrapper {
