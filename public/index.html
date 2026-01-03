@@ -142,6 +142,37 @@
             cursor: pointer;
         }
 
+        /* --- Undo / Redo ボタンの設定 --- */
+        /* 基本は少し暗めのグレー（無効時） */
+        .btn-undo, .btn-redo {
+            background-color: #555555; 
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        /* ★「推せる時（disabledじゃない時）」に緑色にする */
+        .btn-undo:not(:disabled), 
+        .btn-redo:not(:disabled) {
+            background-color: #28a745 !important; /* 鮮やかな緑 */
+        }
+
+
+        /* --- ダークモード切り替えボタンの設定 --- */
+        /* 白モード（通常）の時は、ボタンを「黒」にする */
+        .btn-dark-mode {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        /* ★黒モード（activeクラスがついた時）は、ボタンを「白」にする */
+        .btn-dark-mode.active {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #ddd;
+        }
+
         /* 削除（Clear）ボタンの色を確実に設定 */
         .btn-clear {
             background: #FF3B30 !important; /* 赤色 */
