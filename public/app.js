@@ -1,7 +1,7 @@
 // ===== グローバル状態管理 =====
 const state = {
     anonymousUserId: '',
-    isDarkMode: false,
+    isDarkMode: true,
     textPaths: [],
     undoStack: [],
     redoStack: [],
@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.anonymousUserId = getOrCreateAnonymousUserId();
     resizeCanvas();
     restoreState();
+    updateDarkModeUI(); // Ensure UI reflects state regardless of restoration
 
     // イベントリスナー登録
     window.addEventListener('resize', resizeCanvas);
@@ -147,7 +148,7 @@ function restoreState() {
         try {
             const data = JSON.parse(saved);
             state.textPaths = data.textPaths || [];
-            state.isDarkMode = data.isDarkMode || false;
+            state.isDarkMode = data.isDarkMode !== undefined ? data.isDarkMode : true;
             titleInput.value = data.title || '';
             textInput.value = data.text || 'Draw your text';
             updateDarkModeUI();
