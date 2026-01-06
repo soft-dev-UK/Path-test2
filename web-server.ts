@@ -16,7 +16,11 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 // 描画データは大きくなる可能性があるため、limit: '50mb' を維持します
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Static file serving - fix for dist/ structure
+// In dev: process.cwd()/public
+// In prod (dist): process.cwd()/public (assuming running from root)
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // ===== API エンドポイント =====
 
@@ -110,7 +114,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // SPA用のフォールバック
 app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 // エラーハンドリング
