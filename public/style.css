@@ -81,6 +81,7 @@ body.dark-mode .header {
   font-weight: 700;
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   width: fit-content;
@@ -513,6 +514,7 @@ body.dark-mode .help-content {
   margin-top: 12px;
   margin-bottom: 24px;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
