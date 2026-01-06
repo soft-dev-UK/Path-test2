@@ -704,7 +704,7 @@ async function handleShare() {
 
             // 2. Copy URL & Show Toast
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href).then(() => {
+                navigator.clipboard.writeText('https://text-path-drawer.vercel.app').then(() => {
                     toast.classList.add('show');
                     setTimeout(() => {
                         toast.classList.remove('show');
@@ -714,7 +714,7 @@ async function handleShare() {
 
             // 3. Open X (Twitter)
             const tweetText = encodeURIComponent('✨ 文字で描く魔法のアート『Text Path Drawer』で作品を作ったよ！ #TextPathDrawer');
-            const tweetUrl = encodeURIComponent(window.location.href);
+            const tweetUrl = encodeURIComponent('https://text-path-drawer.vercel.app');
             window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
         }
     } catch (err) {
