@@ -255,6 +255,32 @@ function calculateCharPositions(points, text, isDark, startTime, endTime, forced
         }
         accumulatedLength += segmentLength;
     }
+
+    // Fallback: If floating point errors prevented the last character(s) from being added,
+    // place them at the very end of the last segment.
+    if (charIndex < charCount && points.length > 0) {
+        const lastPoint = points[points.length - 1];
+        // Ideally we might want the rotation of the last segment, but 0 or last known angle is fine as fallback
+        // Let's try to get angle from last two points if possible
+        let lastAngle = 0;
+        if (points.length >= 2) {
+            const pLast = points[points.length - 1];
+            const pPrev = points[points.length - 2];
+            lastAngle = (Math.atan2(pLast.y - pPrev.y, pLast.x - pPrev.x) * 180) / Math.PI;
+        }
+
+        while (charIndex < charCount) {
+            chars.push({
+                char: text[charIndex],
+                x: lastPoint.x,
+                y: lastPoint.y,
+                rotation: lastAngle,
+                fontSize: baseFontSize
+            });
+            charIndex++;
+        }
+    }
+
     return chars;
 }
 
