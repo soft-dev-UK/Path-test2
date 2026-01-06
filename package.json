@@ -1,0 +1,35 @@
+{
+  "name": "text-path-drawer-web",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "web-server.ts",
+  "scripts": {
+    "web:dev": "tsx watch web-server.ts",
+    "web:build": "tsc --project tsconfig.web.json",
+    "web:start": "node dist/web-server.js",
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.44.7",
+    "express": "^4.21.2",
+    "postgres": "^3.4.7",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.8.1",
+    "@types/react": "~19.1.0",
+    "drizzle-kit": "^0.31.4",
+    "prettier": "^3.6.2",
+    "tsx": "^4.19.1",
+    "typescript": "~5.9.2"
+  },
+  "packageManager": "pnpm@9.12.0"
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Text Path Drawer</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <h1>✨ Text Path Drawer</h1>
+                <button type="button" class="btn-icon" id="helpBtn" title="How to Play"
+                    style="width: auto; height: 36px; padding: 0 16px; border-radius: 18px; flex: none;">
+                    <span style="font-size: 0.9rem; font-weight: 600;">楽しみ方</span>
+                </button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="textInput" placeholder="描画するテキスト..." value="Draw your text">
+                <input type="text" id="titleInput" placeholder="作品のタイトル...">
+                <button type="button" class="btn-gallery" id="galleryBtn" title="Gallery"
+                    style="width: auto; padding: 0 12px; height: 42px;">
+                    <span style="font-size: 0.9em;">Gallery</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Canvas -->
+        <main class="canvas-wrapper">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </main>
+
+        <!-- Toolbar -->
+        <footer class="toolbar">
+            <div class="button-group">
+                <button class="btn-icon" id="undoBtn" title="Undo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7v6h6" />
+                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+                    </svg>
+                </button>
+                <button class="btn-icon" id="redoBtn" title="Redo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 7v6h-6" />
+                        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+                    </svg>
+                </button>
+                <button class="btn-icon" id="darkModeBtn" title="Toggle Dark Mode" style="font-size: 1.2rem;">
+                    ☀️
+                </button>
+            </div>
+
+            <div class="button-group right">
+                <button type="button" class="btn-danger" id="clearBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    Clear
+                </button>
+                <button type="button" class="btn-primary" id="exchangeBtn">
+                    ✨ 作品を交換
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="exchangeModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">作品を受け取りました！</h2>
+            <div class="received-canvas" id="receivedCanvas"></div>
+            <p class="status-message" style="margin-bottom: 20px;">あなたの作品は誰かの元へ届きました 🎁</p>
+            <button class="btn-gallery" id="nextBtn" style="width: 100%;">
+                次の作品を描く
+            </button>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal" id="galleryModal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="modal-title" style="margin: 0;">Gallery</h2>
+                <button type="button" class="btn-icon" id="closeGalleryBtn"
+                    style="width: 32px; height: 32px; padding: 0; flex: none; border-radius: 50%;">✕</button>
+            </div>
+
+            <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="tab-btn active" data-tab="myworks">自分の作品</button>
+                <button class="tab-btn" data-tab="collection">コレクション</button>
+            </div>
+
+            <div class="gallery-content" id="myworks-content"
+                style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
+                <!-- Content injected by JS -->
+            </div>
+
+            <div class="gallery-content" id="collection-content"
+                style="flex: 1; overflow-y: auto; display: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content help-content">
+            <button class="btn-icon close-help-btn" id="closeHelpBtn">✕</button>
+            <h2 class="section-title">Text Path Drawerのあそびかた</h2>
+
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="help-icon">1</div>
+                    <h3>ことばを決めよう</h3>
+                    <p>画面上のボックスに、描きたい言葉を入力してみて。<br>(デフォルトは"Draw your text"だよ)</p>
+                </div>
+
+                <div class="help-card">
+                    <div class="help-icon">2</div>
+                    <h3>なぞって描く</h3>
+                    <p>キャンバスをなぞると文字の軌跡が浮かび上がります。<br>早く描けば小さく、ゆっくり描けば大きく。</p>
+                </div>
+
+                <div class="help-card">
+                    <div class="help-icon">3</div>
+                    <h3>作品を交換</h3>
+                    <p>タイトルをつけて「作品を交換」をタップ。<br>あなたの作品が誰かに届き、代わりに誰かの作品が届きます。</p>
+                </div>
+
+                <div class="help-card">
+                    <div class="help-icon">4</div>
+                    <h3>ギャラリーを見る</h3>
+                    <p>「Gallery」ボタンから、これまでの作品や、交換して集めたコレクションをいつでも確認できるよ。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content detail-content">
+            <div class="modal-header" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <button type="button" class="btn-icon" id="closeDetailBtn"
+                    style="width: 32px; height: 32px; padding: 0; flex: none; border-radius: 50%;">✕</button>
+            </div>
+
+            <div class="detail-canvas-container">
+                <canvas id="detailCanvas"></canvas>
+            </div>
+
+            <h3 class="detail-title" id="detailTitle">Untitled</h3>
+            <p class="detail-info" id="detailInfo"></p>
+
+            <button type="button" class="btn-gallery" id="shareBtn" style="margin-top: 16px; width: 100%;">
+                Share
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">リンクをコピーしました！✨</div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
