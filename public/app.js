@@ -685,9 +685,16 @@ async function handleShare() {
         const blob = await new Promise(resolve => detailCanvas.toBlob(resolve, 'image/png'));
         const file = new File([blob], 'text-path-art.png', { type: 'image/png' });
 
+        const shareText = `✨文字で描く魔法のアート
+『Text Path Drawer』で作品を作ったよ！
+「${currentDetailArtwork.title || 'Untitled'}」
+
+https://text-path-drawer.vercel.app
+#TextPathDrawer`;
+
         const shareData = {
             title: 'Text Path Drawer',
-            text: '✨ 文字で描く魔法のアート『Text Path Drawer』で作品を作ったよ！ #TextPathDrawer',
+            text: shareText,
             files: [file],
         };
 
@@ -713,9 +720,8 @@ async function handleShare() {
             }
 
             // 3. Open X (Twitter)
-            const tweetText = encodeURIComponent('✨ 文字で描く魔法のアート『Text Path Drawer』で作品を作ったよ！ #TextPathDrawer');
-            const tweetUrl = encodeURIComponent('https://text-path-drawer.vercel.app');
-            window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}`, '_blank');
+            const tweetText = encodeURIComponent(shareText);
+            window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
         }
     } catch (err) {
         console.error('Share failed:', err);
