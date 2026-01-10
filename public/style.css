@@ -363,7 +363,10 @@ button:disabled {
   transform: scale(0.9);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   max-height: 85vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Internal scroll handles overflow */
 }
 
 body.dark-mode .modal-content {
@@ -374,6 +377,28 @@ body.dark-mode .modal-content {
 .modal.active .modal-content {
   transform: scale(1);
 }
+
+/* Modal Scrollable Area */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  /* Important for flex child scrolling */
+  padding-bottom: 16px;
+}
+
+/* Modal Footer (Sticky Share Button) */
+.modal-footer {
+  flex-shrink: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  margin-top: auto;
+}
+
+body.dark-mode .modal-footer {
+  border-color: var(--border-dark);
+}
+
 
 .modal-title {
   font-size: 1.5rem;

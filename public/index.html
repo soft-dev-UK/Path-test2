@@ -158,16 +158,20 @@
                     style="width: 32px; height: 32px; padding: 0; flex: none; border-radius: 50%;">✕</button>
             </div>
 
-            <div class="detail-canvas-container">
-                <canvas id="detailCanvas"></canvas>
+            <div class="modal-body">
+                <div class="detail-canvas-container">
+                    <canvas id="detailCanvas"></canvas>
+                </div>
+
+                <h3 class="detail-title" id="detailTitle">Untitled</h3>
+                <p class="detail-info" id="detailInfo"></p>
             </div>
 
-            <h3 class="detail-title" id="detailTitle">Untitled</h3>
-            <p class="detail-info" id="detailInfo"></p>
-
-            <button type="button" class="btn-gallery" id="shareBtn" style="margin-top: 16px; width: 100%;">
-                Share
-            </button>
+            <div class="modal-footer">
+                <button type="button" class="btn-gallery" id="shareBtn" style="width: 100%;">
+                    Share
+                </button>
+            </div>
         </div>
     </div>
 

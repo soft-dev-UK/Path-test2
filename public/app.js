@@ -685,12 +685,25 @@ async function handleShare() {
         const blob = await new Promise(resolve => detailCanvas.toBlob(resolve, 'image/png'));
         const file = new File([blob], 'text-path-art.png', { type: 'image/png' });
 
-        const shareText = `✨文字で描く魔法のアート
+        const creatorId = currentDetailArtwork.authorId || currentDetailArtwork.anonymousUserId;
+        const isOwnWork = creatorId === state.anonymousUserId;
+
+        let shareText = '';
+        if (isOwnWork) {
+            shareText = `✨文字で描く魔法のアート
 『Text Path Drawer』で作品を作ったよ！
 「${currentDetailArtwork.title || 'Untitled'}」
 
 https://text-path-drawer.vercel.app
 #TextPathDrawer`;
+        } else {
+            shareText = `✨文字で描く魔法のアート
+『Text Path Drawer』で素敵な作品を受け取ったよ！
+「${currentDetailArtwork.title || 'Untitled'}」
+
+https://text-path-drawer.vercel.app
+#TextPathDrawer`;
+        }
 
         const shareData = {
             title: 'Text Path Drawer',
