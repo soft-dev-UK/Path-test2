@@ -384,8 +384,9 @@ body.dark-mode .modal-content {
   /* Remove container padding */
   display: flex !important;
   flex-direction: column;
-  overflow: hidden !important;
-  /* Clip for sticky footer */
+  display: flex !important;
+  flex-direction: column;
+  /* Removed overflow: hidden !important to prevent clipping */
 }
 
 .detail-content .modal-header {
@@ -407,7 +408,10 @@ body.dark-mode .modal-content {
   z-index: 10;
   flex-shrink: 0;
   border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--border-light);
   margin-top: auto;
+  border-radius: 0 0 28px 28px;
+  /* Maintain rounded corners */
 }
 
 body.dark-mode .detail-content .modal-footer {
