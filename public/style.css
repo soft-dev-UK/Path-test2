@@ -382,11 +382,11 @@ body.dark-mode .modal-content {
   width: 95%;
   padding: 0;
   /* Remove container padding */
+  /* Remove container padding */
   display: flex !important;
   flex-direction: column;
-  display: flex !important;
-  flex-direction: column;
-  /* Removed overflow: hidden !important to prevent clipping */
+  overflow: hidden !important;
+  /* Forces inner scroll only */
 }
 
 .detail-content .modal-header {
@@ -408,9 +408,9 @@ body.dark-mode .modal-content {
   z-index: 10;
   flex-shrink: 0;
   border-top: 1px solid var(--border-light);
-  border-top: 1px solid var(--border-light);
   margin-top: auto;
   border-radius: 0 0 28px 28px;
+
   /* Maintain rounded corners */
 }
 
