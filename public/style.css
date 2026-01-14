@@ -327,6 +327,51 @@ body.dark-mode .btn-icon:hover {
   box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
 }
 
+.btn-outline {
+  background: var(--surface-light);
+  color: var(--text-light);
+  border: 1px solid var(--border-light);
+  box-shadow: none;
+}
+
+body.dark-mode .btn-outline {
+  background: var(--surface-dark);
+  color: var(--text-dark);
+  border-color: var(--border-dark);
+}
+
+.btn-outline:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+}
+
+body.dark-mode .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-dark);
+}
+
+.btn-black {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .btn-black {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn-black:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .btn-black:hover {
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;

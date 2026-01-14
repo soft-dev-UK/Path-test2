@@ -42,7 +42,9 @@ const detailCanvas = document.getElementById('detailCanvas');
 const detailCtx = detailCanvas.getContext('2d');
 const detailTitle = document.getElementById('detailTitle');
 const detailInfo = document.getElementById('detailInfo');
-const exportBtn = document.getElementById('exportBtn');
+const copyBtn = document.getElementById('copyBtn');
+const xShareBtn = document.getElementById('xShareBtn');
+const nativeShareBtn = document.getElementById('nativeShareBtn');
 const toast = document.getElementById('toast');
 const errorMessage = document.getElementById('errorMessage');
 const statusMessage = document.getElementById('statusMessage');
@@ -86,7 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
     closeDetailBtn.addEventListener('click', () => {
         detailModal.classList.remove('active');
     });
-    exportBtn.addEventListener('click', handleShare);
+
+    copyBtn.addEventListener('click', handleCopy);
+    xShareBtn.addEventListener('click', handleXShare);
+    nativeShareBtn.addEventListener('click', handleNativeShare);
 
     // Gallery
     galleryBtn.addEventListener('click', () => {
@@ -678,68 +683,110 @@ function drawDetailCanvas(artwork) {
     });
 }
 
-async function handleShare() {
-    if (!currentDetailArtwork) return;
+async function prepareShareData() {
+    if (!currentDetailArtwork) return null;
 
-    try {
-        const blob = await new Promise(resolve => detailCanvas.toBlob(resolve, 'image/png'));
-        const file = new File([blob], 'text-path-art.png', { type: 'image/png' });
+    const blob = await new Promise(resolve => detailCanvas.toBlob(resolve, 'image/png'));
+    const file = new File([blob], 'art.png', { type: 'image/png' }); // Generic name safer for some platforms
 
-        const creatorId = currentDetailArtwork.authorId || currentDetailArtwork.anonymousUserId;
-        const isOwnWork = creatorId === state.anonymousUserId;
+    const creatorId = currentDetailArtwork.authorId || currentDetailArtwork.anonymousUserId;
+    const isOwnWork = creatorId === state.anonymousUserId;
 
-        let shareText = '';
-        if (isOwnWork) {
-            shareText = `✨文字で描く魔法のアート
+    let text = '';
+    if (isOwnWork) {
+        text = `✨文字で描く魔法のアート
 『Text Path Drawer』で作品を作ったよ！
 「${currentDetailArtwork.title || 'Untitled'}」
 
 https://text-path-drawer.vercel.app
 #TextPathDrawer`;
-        } else {
-            shareText = `✨文字で描く魔法のアート
+    } else {
+        text = `✨文字で描く魔法のアート
 『Text Path Drawer』で素敵な作品を受け取ったよ！
 「${currentDetailArtwork.title || 'Untitled'}」
 
 https://text-path-drawer.vercel.app
 #TextPathDrawer`;
-        }
+    }
 
-        const shareData = {
-            title: 'Text Path Drawer',
-            text: shareText,
-            files: [file],
-        };
+    return { text, file, blob };
+}
 
+async function handleCopy() {
+    const data = await prepareShareData();
+    if (!data) return;
+
+    try {
+        // Try writing image to clipboard
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                'image/png': data.blob
+            })
+        ]);
+        showToast('画像をコピーしました！📋');
+    } catch (err) {
+        console.error('Clipboard write failed', err);
+        showToast('コピーに失敗しました...');
+    }
+}
+
+async function handleXShare() {
+    const data = await prepareShareData();
+    if (!data) return;
+
+    // For X, we can only pre-fill text. User has to attach image manually or we just share link/text.
+    // Since we generate dynamic image, we can't easily auto-embed it without OG tags from server (which requires SSD/Headless).
+    // So we just share the text and maybe prompt user or download image.
+    // Strategy: Download image for them + Open Tweet window logic.
+
+    // 1. Trigger Download so they have the file
+    const link = document.createElement('a');
+    link.download = `text-path-art_${Date.now()}.png`;
+    link.href = URL.createObjectURL(data.blob);
+    link.click();
+
+    // 2. Open Tweet
+    // Remove the URL from text to put it in specific fields if needed, but simple text param is easiest
+    // Truncate Hashtags for query safety if needed
+    const tweetText = encodeURIComponent(data.text);
+    window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+
+    showToast('画像も保存しました！ツイートに添付してね✨');
+}
+
+async function handleNativeShare() {
+    const data = await prepareShareData();
+    if (!data) return;
+
+    const shareData = {
+        title: 'Text Path Drawer',
+        text: data.text,
+        files: [data.file],
+    };
+
+    try {
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
             await navigator.share(shareData);
         } else {
-            // Fallback: Enhanced PC Share - Double Action
-
-            // 1. Download Image
-            const link = document.createElement('a');
-            link.download = `art_${Date.now()}.png`;
-            link.href = detailCanvas.toDataURL('image/png');
-            link.click();
-
-            // 2. Copy URL & Show Toast
+            // Fallback for "More" button on unsupported devices -> Just Copy Text/URL
             if (navigator.clipboard) {
-                navigator.clipboard.writeText('https://text-path-drawer.vercel.app').then(() => {
-                    toast.classList.add('show');
-                    setTimeout(() => {
-                        toast.classList.remove('show');
-                    }, 3000);
-                });
+                await navigator.clipboard.writeText(data.text);
+                showToast('テキストとURLをコピーしました！');
+            } else {
+                alert('お使いの環境ではシェア機能がサポートされていません');
             }
-
-            // 3. Open X (Twitter)
-            const tweetText = encodeURIComponent(shareText);
-            window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
         }
     } catch (err) {
-        console.error('Share failed:', err);
-        // If share was aborted by user, do nothing. 
+        console.error('Share failed/cancelled', err);
     }
+}
+
+function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }
 
 function renderPreview(strokesDataStr, container, isDarkBg) {
