@@ -717,16 +717,31 @@ async function handleCopy() {
     if (!data) return;
 
     try {
-        // Try writing image to clipboard
+        // Prepare ClipboardItem with both text and image if supported
+        // Note: Not all browsers support mixed content writing easily, but standard spec allows it.
+        // Fallback or sequential write might be needed if this fails, but let's try standard way.
+
+        const clipboardItems = {
+            'image/png': data.blob,
+            'text/plain': new Blob([data.text], { type: 'text/plain' })
+        };
+
         await navigator.clipboard.write([
-            new ClipboardItem({
-                'image/png': data.blob
-            })
+            new ClipboardItem(clipboardItems)
         ]);
-        showToast('画像をコピーしました！📋');
+
+        showToast('画像とテキストをコピーしました！📋');
     } catch (err) {
         console.error('Clipboard write failed', err);
-        showToast('コピーに失敗しました...');
+        // Fallback: Try just image if mixed failed (common in some browsers)
+        try {
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': data.blob })
+            ]);
+            showToast('画像をコピーしました！(テキストは除きます)');
+        } catch (e2) {
+            showToast('コピーに失敗しました...');
+        }
     }
 }
 
