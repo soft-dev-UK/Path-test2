@@ -42,7 +42,7 @@ const detailCanvas = document.getElementById('detailCanvas');
 const detailCtx = detailCanvas.getContext('2d');
 const detailTitle = document.getElementById('detailTitle');
 const detailInfo = document.getElementById('detailInfo');
-const shareBtn = document.getElementById('shareBtn');
+const exportBtn = document.getElementById('exportBtn');
 const toast = document.getElementById('toast');
 const errorMessage = document.getElementById('errorMessage');
 const statusMessage = document.getElementById('statusMessage');
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeDetailBtn.addEventListener('click', () => {
         detailModal.classList.remove('active');
     });
-    shareBtn.addEventListener('click', handleShare);
+    exportBtn.addEventListener('click', handleShare);
 
     // Gallery
     galleryBtn.addEventListener('click', () => {
