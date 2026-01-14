@@ -169,24 +169,33 @@
 
             <div class="modal-footer">
                 <div class="share-actions"
-                    style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                    <button type="button" class="btn-gallery btn-share-gradient" id="copyBtn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    style="width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    <button type="button" class="btn-gallery btn-share-gradient" id="copyImgBtn" title="画像をコピー">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
                         </svg>
-                        Copy
                     </button>
-                    <button type="button" class="btn-gallery btn-share-gradient" id="xShareBtn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <button type="button" class="btn-gallery btn-share-gradient" id="copyTextBtn" title="文章をコピー">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </button>
+                    <button type="button" class="btn-gallery btn-share-gradient" id="xShareBtn" title="Post to X">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                         </svg>
-                        Post
                     </button>
-                    <button type="button" class="btn-gallery btn-share-gradient" id="nativeShareBtn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <button type="button" class="btn-gallery btn-share-gradient" id="nativeShareBtn" title="Other">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="18" cy="5" r="3"></circle>
                             <circle cx="6" cy="12" r="3"></circle>
@@ -194,7 +203,6 @@
                             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
                             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                         </svg>
-                        More
                     </button>
                 </div>
             </div>

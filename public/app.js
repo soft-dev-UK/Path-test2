@@ -42,7 +42,8 @@ const detailCanvas = document.getElementById('detailCanvas');
 const detailCtx = detailCanvas.getContext('2d');
 const detailTitle = document.getElementById('detailTitle');
 const detailInfo = document.getElementById('detailInfo');
-const copyBtn = document.getElementById('copyBtn');
+const copyImgBtn = document.getElementById('copyImgBtn');
+const copyTextBtn = document.getElementById('copyTextBtn');
 const xShareBtn = document.getElementById('xShareBtn');
 const nativeShareBtn = document.getElementById('nativeShareBtn');
 const toast = document.getElementById('toast');
@@ -89,7 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
         detailModal.classList.remove('active');
     });
 
-    copyBtn.addEventListener('click', handleCopy);
+    copyImgBtn.addEventListener('click', handleCopyImage);
+    copyTextBtn.addEventListener('click', handleCopyText);
     xShareBtn.addEventListener('click', handleXShare);
     nativeShareBtn.addEventListener('click', handleNativeShare);
 
@@ -712,36 +714,31 @@ https://text-path-drawer.vercel.app
     return { text, file, blob };
 }
 
-async function handleCopy() {
+async function handleCopyImage() {
     const data = await prepareShareData();
     if (!data) return;
 
     try {
-        // Prepare ClipboardItem with both text and image if supported
-        // Note: Not all browsers support mixed content writing easily, but standard spec allows it.
-        // Fallback or sequential write might be needed if this fails, but let's try standard way.
-
-        const clipboardItems = {
-            'image/png': data.blob,
-            'text/plain': new Blob([data.text], { type: 'text/plain' })
-        };
-
         await navigator.clipboard.write([
-            new ClipboardItem(clipboardItems)
+            new ClipboardItem({ 'image/png': data.blob })
         ]);
-
-        showToast('画像とテキストをコピーしました！📋');
+        showToast('画像をコピーしました！🖼️');
     } catch (err) {
-        console.error('Clipboard write failed', err);
-        // Fallback: Try just image if mixed failed (common in some browsers)
-        try {
-            await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': data.blob })
-            ]);
-            showToast('画像をコピーしました！(テキストは除きます)');
-        } catch (e2) {
-            showToast('コピーに失敗しました...');
-        }
+        console.error('Image copy failed', err);
+        showToast('コピーに失敗しました...');
+    }
+}
+
+async function handleCopyText() {
+    const data = await prepareShareData();
+    if (!data) return;
+
+    try {
+        await navigator.clipboard.writeText(data.text);
+        showToast('文章をコピーしました！📝');
+    } catch (err) {
+        console.error('Text copy failed', err);
+        showToast('コピーに失敗しました...');
     }
 }
 
